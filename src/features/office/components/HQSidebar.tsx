@@ -7,7 +7,8 @@ export type HQSidebarTab =
   | "history"
   | "kanban"
   | "playbooks"
-  | "analytics";
+  | "analytics"
+  | "projects";
 
 type HQSidebarProps = {
   open: boolean;
@@ -23,6 +24,7 @@ type HQSidebarProps = {
   kanbanPanel: ReactNode;
   playbooksPanel: ReactNode;
   analyticsPanel: ReactNode;
+  projectsPanel: ReactNode;
 };
 
 const TAB_LABELS: Record<HQSidebarTab, string> = {
@@ -31,9 +33,10 @@ const TAB_LABELS: Record<HQSidebarTab, string> = {
   kanban: "Kanban",
   playbooks: "Playbooks",
   analytics: "Analytics",
+  projects: "Projects",
 };
 
-const PRIMARY_TABS: HQSidebarTab[] = ["inbox", "history", "kanban", "playbooks"];
+const PRIMARY_TABS: HQSidebarTab[] = ["inbox", "history", "kanban", "playbooks", "projects"];
 
 export function HQSidebar({
   open,
@@ -49,6 +52,7 @@ export function HQSidebar({
   kanbanPanel,
   playbooksPanel,
   analyticsPanel,
+  projectsPanel,
 }: HQSidebarProps) {
   const analyticsOnly = activeTab === "analytics";
   const railOnly = analyticsOnly;
@@ -61,6 +65,8 @@ export function HQSidebar({
           ? kanbanPanel
         : activeTab === "playbooks"
           ? playbooksPanel
+        : activeTab === "projects"
+          ? projectsPanel
           : analyticsPanel;
   const boardLikeWidth = activeTab === "kanban";
 

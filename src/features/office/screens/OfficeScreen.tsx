@@ -156,6 +156,7 @@ import type {
   CompanyBuilderPlan,
 } from "@/features/company-builder/types";
 import { AnalyticsPanel } from "@/features/office/components/panels/AnalyticsPanel";
+import { ProjectsPanel } from "@/features/projects/components/ProjectsPanel";
 import { HistoryPanel } from "@/features/office/components/panels/HistoryPanel";
 import { InboxPanel } from "@/features/office/components/panels/InboxPanel";
 import { KanbanDisabledPanel } from "@/features/office/components/panels/KanbanDisabledPanel";
@@ -5127,6 +5128,7 @@ export function OfficeScreen({
               }}
             />
           }
+          projectsPanel={<ProjectsPanel />}
         />
       ) : null}
 

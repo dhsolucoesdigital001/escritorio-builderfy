@@ -19,12 +19,12 @@ export const createRuntimeProvider = (
         runtimeName: "Local Runtime",
         routeProfile: "local",
       });
-    case "claw3d":
+    case "escritorio-builderfy":
       return new CustomRuntimeProvider(client, runtimeUrl, {
-        id: "claw3d",
-        label: "Claw3D Runtime",
-        runtimeName: "Claw3D Runtime",
-        routeProfile: "claw3d",
+        id: "escritorio-builderfy",
+        label: "Escritorio Builderfy Runtime",
+        runtimeName: "Escritorio Builderfy Runtime",
+        routeProfile: "escritorio-builderfy",
       });
     case "custom":
       return new CustomRuntimeProvider(client, runtimeUrl, {

@@ -34,7 +34,7 @@ export type RuntimeProviderId =
   | "hermes"
   | "demo"
   | "local"
-  | "claw3d"
+  | "escritorio-builderfy"
   | "custom";
 
 export type RuntimeProviderMetadata = {

@@ -21,7 +21,7 @@ const prerequisites = [
   },
   {
     label: "Node.js 20+",
-    detail: "Required for running Claw3D locally",
+    detail: "Required for running Escritorio Builderfy locally",
     link: "https://nodejs.org",
     linkLabel: "Download Node.js",
   },

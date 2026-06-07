@@ -249,7 +249,7 @@ export class CustomRuntimeProvider implements RuntimeProvider {
     readonly client: GatewayClient,
     runtimeUrl: string,
     options?: {
-      id?: Extract<RuntimeProviderId, "custom" | "local" | "claw3d">;
+      id?: Extract<RuntimeProviderId, "custom" | "local" | "escritorio-builderfy">;
       label?: string;
       runtimeName?: string;
       vendor?: string | null;

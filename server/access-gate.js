@@ -89,6 +89,15 @@ function createAccessGate(options) {
   const getAuthState = (req) => {
     if (!enabled) return { authorized: true, limited: false };
     const ip = resolveClientIp(req);
+
+    // Check query param first (for API testing / browser convenience)
+    const url = new URL(req.url || "/", "http://localhost");
+    const queryToken = url.searchParams.get("studio_access");
+    if (queryToken && safeCompare(queryToken, token)) {
+      rateLimiter.reset(ip);
+      return { authorized: true, limited: false };
+    }
+
     const cookieHeader = req.headers?.cookie;
     const cookies = parseCookies(cookieHeader);
     const authorized = safeCompare(cookies[cookieName] || "", token);

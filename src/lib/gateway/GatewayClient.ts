@@ -813,7 +813,12 @@ export const useGatewayConnection = (
         };
         setGatewayUrl(nextGatewayUrl);
         setToken(nextToken);
-        setSelectedAdapterTypeState(nextAdapterType);
+        // NOTE: We intentionally do NOT call setSelectedAdapterTypeState(nextAdapterType)
+        // here. Doing so would change selectedAdapterType, which would recreate
+        // setSelectedAdapterType (depends on adapterProfiles/localGatewayDefaults),
+        // which would re-run every effect that has setSelectedAdapterType in its
+        // deps array → infinite loop. selectedAdapterType stays at its initial
+        // value "openclaw" unless explicitly changed by user action.
         setAdapterProfiles(resolvedGatewayProfiles.profiles);
         setHasLastKnownGoodState(hasPersistedProfileForSelected);
       } catch (err) {
@@ -1153,6 +1158,19 @@ export const useGatewayConnection = (
       hasLastKnownGood: baseline.hasLastKnownGood,
     };
   }, [adapterProfiles, gatewayUrl, selectedAdapterType, settingsCoordinator, settingsLoaded, token]);
+
+  // Sync selectedAdapterType from localGatewayDefaults when settings first load.
+  // Separated from loadSettings effect to avoid setSelectedAdapterTypeState
+  // being called inside loadSettings, which would recreate setSelectedAdapterType
+  // (depends on adapterProfiles which is also set in loadSettings) → loop.
+  useEffect(() => {
+    if (!settingsLoaded) return;
+    if (!localGatewayDefaults) return;
+    const defaultAdapter = localGatewayDefaults.adapterType ?? "openclaw";
+    if (defaultAdapter !== selectedAdapterType) {
+      setSelectedAdapterTypeState(defaultAdapter);
+    }
+  }, [selectedAdapterType, settingsLoaded, localGatewayDefaults]);
 
   const useLocalGatewayDefaults = useCallback(() => {
     if (!localGatewayDefaults) {

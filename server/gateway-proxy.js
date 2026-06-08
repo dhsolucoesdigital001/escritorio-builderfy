@@ -257,18 +257,16 @@ function createGatewayProxy(options) {
       const client = isObject(connectParams.client) ? { ...connectParams.client } : {};
       const clientId = typeof client.id === "string" ? client.id.trim() : "";
 
-      // FIX v0.2.0: Always use webchat-ui and strip device auth for OpenClaw upstream.
-      // This eliminates 1008 "pairing required" errors when browser reconnects.
-      // The browser's ED25519 device auth is not compatible with the proxy's token auth.
+      // FIX v0.2.0+: Keep device auth for OpenClaw upstream (with nonce).
+      // The gateway requires device auth with the challenge nonce. Removing it
+      // causes the gateway to reject the connect with 1002 Protocol Error.
+      // Token auth and device auth can coexist — both are passed to the gateway.
       if (upstreamAdapterType === "openclaw") {
         client.id = "webchat-ui";
         client.mode = client.mode || "webchat";
         connectParams.client = client;
-        // Always remove device auth — proxy injects token auth upstream instead
-        if (isObject(connectParams.device)) {
-          delete connectParams.device;
-        }
-        // Also ensure no deviceToken leaks through
+        // Do NOT remove device auth — it contains the nonce from connect.challenge
+        // Only strip deviceToken if present (different from device auth)
         if (isObject(connectParams.auth)) {
           delete connectParams.auth.deviceToken;
         }

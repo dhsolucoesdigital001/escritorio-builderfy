@@ -22,7 +22,7 @@ import { buildAgentSkillsAllowlistSet, deriveAgentSkillsAccessMode } from "@/lib
 type MarketplaceFilter = "all" | SkillMarketplaceCollectionId;
 
 const FILTER_LABELS: Record<MarketplaceFilter, string> = {
-  escritorio-builderfy: "Escritorio Builderfy",
+  "escritorio-builderfy": "Escritorio Builderfy",
   all: "All",
   featured: "Featured",
   installed: "Installed",

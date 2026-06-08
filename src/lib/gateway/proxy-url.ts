@@ -17,8 +17,10 @@ export const resolveStudioProxyGatewayUrl = (_upstreamGatewayUrl?: string): stri
   // Always use the Studio proxy. The upstreamGatewayUrl (e.g. ws://localhost:18789)
   // is the gateway's address on the SERVER — the browser must go through the proxy
   // which runs on the same host as the office app.
-  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+  // Always use ws:// for the proxy — the office server runs in HTTP mode (no --https flag).
+  // Even when the browser is at https://, Tailscale Funnel terminates TLS and forwards plain HTTP,
+  // so the office server's WS upgrade handler only works with ws://.
   const host = window.location.host;
-  return `${protocol}://${host}/api/gateway/ws?studio_access=${STUDIO_ACCESS_TOKEN}`;
+  return `ws://${host}/api/gateway/ws?studio_access=${STUDIO_ACCESS_TOKEN}`;
 };
 

@@ -265,11 +265,11 @@ export const buildSkillMarketplaceCollections = (
     collections.push({ id: "featured", label: "Featured", entries: featured });
   }
 
-  const escritorio-builderfy = entries.filter((entry) =>
+  const escritorioBuilderfyEntries = entries.filter((entry) =>
     getPackagedSkillBySkillKey(entry.skill.skillKey),
   );
-  if (escritorio-builderfy.length > 0) {
-    collections.push({ id: "escritorio-builderfy", label: "Escritorio Builderfy", entries: escritorio-builderfy });
+  if (escritorioBuilderfyEntries.length > 0) {
+    collections.push({ id: "escritorio-builderfy", label: "Escritorio Builderfy", entries: escritorioBuilderfyEntries });
   }
 
   const installed = entries.filter(

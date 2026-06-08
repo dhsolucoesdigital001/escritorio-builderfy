@@ -121,7 +121,8 @@ function createAccessGate(options) {
       url.startsWith("/_next/") ||
       url.startsWith("/favicon") ||
       url.startsWith("/robots") ||
-      url.startsWith("/sitemap")
+      url.startsWith("/sitemap") ||
+      url.startsWith("/office-assets/")
     ) {
       return false; // let Next.js handle it, no auth needed
     }

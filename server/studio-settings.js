@@ -92,6 +92,21 @@ const loadUpstreamGatewaySettings = (env = process.env) => {
     typeof gateway?.adapterType === "string" && gateway.adapterType.trim()
       ? gateway.adapterType.trim()
       : "openclaw";
+
+  // Env vars (from PM2) take priority — they are the source of truth for the
+  // gateway URL in deployed environments. This mirrors the client-side logic.
+  const envUrl = env.ESCRITORIO_BUILDERFY_GATEWAY_URL?.trim() || "";
+  const envToken = env.ESCRITORIO_BUILDERFY_GATEWAY_TOKEN?.trim() || "";
+
+  if (envUrl) {
+    return {
+      url: envUrl,
+      token: token || envToken || "",
+      adapterType,
+      settingsPath,
+    };
+  }
+
   if (!token && adapterType === "openclaw") {
     const defaults = readOpenclawGatewayDefaults(env);
     if (defaults) {

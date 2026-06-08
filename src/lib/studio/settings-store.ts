@@ -96,10 +96,10 @@ const readPortBasedGatewayProfile = (
 };
 
 const buildEnvGatewayDefaults = (): StudioGatewaySettings | null => {
-  const envUrl = process.env.ESCRITORIO-BUILDERFY_GATEWAY_URL?.trim();
-  const envToken = process.env.ESCRITORIO-BUILDERFY_GATEWAY_TOKEN?.trim() ?? "";
+  const envUrl = process.env.ESCRITORIO_BUILDERFY_GATEWAY_URL?.trim();
+  const envToken = process.env.ESCRITORIO_BUILDERFY_GATEWAY_TOKEN?.trim() ?? "";
   const envAdapterType =
-    normalizeAdapterType(process.env.ESCRITORIO-BUILDERFY_GATEWAY_ADAPTER_TYPE) ?? "openclaw";
+    normalizeAdapterType(process.env.ESCRITORIO_BUILDERFY_GATEWAY_ADAPTER_TYPE) ?? "openclaw";
 
   const hermesProfile = readPortBasedGatewayProfile("hermes", "HERMES_ADAPTER_PORT");
   const demoProfile = readPortBasedGatewayProfile("demo", "DEMO_ADAPTER_PORT");

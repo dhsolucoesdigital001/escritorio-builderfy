@@ -114,6 +114,18 @@ function createAccessGate(options) {
 
   const handleHttp = (req, res) => {
     if (!enabled) return false;
+
+    // Bypass auth for static assets and Next.js internal routes
+    const url = String(req.url || "/");
+    if (
+      url.startsWith("/_next/") ||
+      url.startsWith("/favicon") ||
+      url.startsWith("/robots") ||
+      url.startsWith("/sitemap")
+    ) {
+      return false; // let Next.js handle it, no auth needed
+    }
+
     const auth = getAuthState(req);
     if (!auth.authorized) {
       const statusCode = auth.limited ? 429 : 401;

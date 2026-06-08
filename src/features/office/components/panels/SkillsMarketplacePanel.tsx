@@ -155,7 +155,7 @@ export function SkillsMarketplacePanel({
 
   const filterCounts = useMemo(() => {
     const counts: Record<MarketplaceFilter, number> = {
-      escritorio-builderfy: 0,
+      "escritorio-builderfy": 0,
       all: entries.length,
       featured: 0,
       installed: 0,

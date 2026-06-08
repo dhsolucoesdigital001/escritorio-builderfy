@@ -30,7 +30,7 @@ const PROVIDER_LABEL: Record<FloorProvider, string> = {
   paperclip: "Paperclip",
   custom: "Custom",
   local: "Local",
-  escritorio-builderfy: "Escritorio Builderfy",
+  "escritorio-builderfy": "Escritorio Builderfy",
 };
 
 const renderFloorButton = (params: {

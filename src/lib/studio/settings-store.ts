@@ -176,6 +176,21 @@ export const loadStudioSettings = (): StudioSettings => {
   const raw = fs.readFileSync(settingsPath, "utf8");
   const parsed = JSON.parse(raw) as unknown;
   const settings = normalizeStudioSettings(parsed);
+
+  // Always merge env vars for URL — env vars are the source of truth for the gateway URL
+  // in deployed environments (PM2/Supabase). The token from the file is preserved.
+  const gatewayDefaults = loadLocalGatewayDefaults();
+  if (gatewayDefaults?.url?.trim()) {
+    return {
+      ...settings,
+      gateway: {
+        url: gatewayDefaults.url,
+        token: settings.gateway?.token ?? gatewayDefaults.token ?? "",
+        adapterType: settings.gateway?.adapterType ?? gatewayDefaults.adapterType ?? "openclaw",
+      },
+    };
+  }
+
   if (!settings.gateway?.token) {
     const gateway = loadLocalGatewayDefaults();
     if (gateway) {

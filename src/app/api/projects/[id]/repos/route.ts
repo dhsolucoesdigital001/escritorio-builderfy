@@ -4,7 +4,7 @@ import { listProjectRepos, linkRepo, unlinkRepo } from "@/lib/projects/store";
 export const runtime = "nodejs";
 
 const asString = (value: unknown) => (typeof value === "string" ? value.trim() : "");
-const asBoolean = (value: unknown) => typeof value === "boolean" ? value : false;
+const asBoolean = (value: unknown, fallback = false): boolean => typeof value === "boolean" ? value : fallback;
 
 export async function GET(
   _request: Request,

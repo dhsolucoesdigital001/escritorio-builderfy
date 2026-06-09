@@ -297,6 +297,7 @@ function createGatewayProxy(options) {
           typeof settings?.adapterType === "string" && settings.adapterType.trim()
             ? settings.adapterType.trim().toLowerCase()
             : "openclaw";
+        log(`[gateway-proxy] upstream config: url=${upstreamUrl} tokenLen=${upstreamToken.length} adapter=${upstreamAdapterType}`);
       } catch (err) {
         logError("Failed to load upstream gateway settings.", err);
         pendingUpstreamSetupError = {

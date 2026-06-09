@@ -334,6 +334,7 @@ function createGatewayProxy(options) {
         return;
       }
 
+      log(`[gateway-proxy] opening upstream WS: ${upstreamUrl} origin=${upstreamOrigin}`);
       upstreamWs = new WebSocket(upstreamUrl, {
         origin: upstreamOrigin,
         handshakeTimeout: upstreamHandshakeTimeoutMs,

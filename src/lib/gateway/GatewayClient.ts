@@ -936,7 +936,11 @@ export const useGatewayConnection = (
             token,
             authScopeKey: gatewayUrl,
             clientName: resolveGatewayClientName(selectedAdapterType, gatewayUrl),
-            disableDeviceAuth: selectedAdapterType !== "openclaw",
+            // The Studio proxy injects the upstream token server-side; device
+            // auth on the browser causes the gateway to reject the connect
+            // with "device signature invalid" because the browser never sees
+            // the connect.challenge nonce.
+            disableDeviceAuth: true,
           });
           lastError = null;
           break;

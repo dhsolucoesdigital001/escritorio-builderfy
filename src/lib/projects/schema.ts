@@ -122,7 +122,7 @@ export const normalizeProject = (value: unknown, fallbackId: string): Project =>
     officeId: asString(value.officeId, "default").trim() || "default",
     createdAt: asString(value.createdAt, new Date().toISOString()).trim(),
     updatedAt: asString(value.updatedAt, new Date().toISOString()).trim(),
-    archivedAt: value.archivedAt != null ? asString(value.archivedAt, null) : null,
+    archivedAt: value.archivedAt != null ? asString(value.archivedAt) || null : null,
   };
 };
 

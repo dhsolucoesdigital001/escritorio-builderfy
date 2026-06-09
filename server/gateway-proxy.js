@@ -323,7 +323,6 @@ function createGatewayProxy(options) {
         };
         return;
       }
-      log(`[gateway-proxy] upstream allowed: ${upstreamUrl}`);
 
       let upstreamOrigin = "";
       try {

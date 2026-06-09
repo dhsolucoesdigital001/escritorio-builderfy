@@ -316,12 +316,14 @@ function createGatewayProxy(options) {
       }
 
       if (!isUpstreamAllowed(upstreamUrl)) {
+        log(`[gateway-proxy] BLOCKED upstream URL: ${upstreamUrl} allowlist=${process.env.UPSTREAM_ALLOWLIST || "(empty)"} nodeEnv=${process.env.NODE_ENV || "(unset)"}`);
         pendingUpstreamSetupError = {
           code: "studio.gateway_url_blocked",
           message: "Upstream gateway URL is not in the allowed hosts list.",
         };
         return;
       }
+      log(`[gateway-proxy] upstream allowed: ${upstreamUrl}`);
 
       let upstreamOrigin = "";
       try {

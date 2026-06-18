@@ -19,7 +19,7 @@ const DEFAULT_GATEWAY_URL_BY_ADAPTER = {
   hermes: "ws://localhost:18789",
   demo: "ws://localhost:18789",
   local: "http://localhost:7770",
-  escritorio-builderfy: "http://localhost:3000/api/runtime/custom",
+  "escritorio-builderfy": "http://localhost:3000/api/runtime/custom",
   custom: "http://localhost:7770",
 };
 

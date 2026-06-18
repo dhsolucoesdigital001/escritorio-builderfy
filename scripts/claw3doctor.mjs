@@ -22,7 +22,7 @@ import {
   shouldRunHermesChecks,
   shouldRunOpenClawChecks,
   summarizeChecks,
-} from "./lib/escritorio-builderfyoctor-core.mjs";
+} from "./lib/claw3doctor-core.mjs";
 
 const require = createRequire(import.meta.url);
 const {

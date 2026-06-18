@@ -453,6 +453,44 @@ const DEFAULT_LOBBY_FURNITURE: FurnitureSeed[] = [
   ...DEFAULT_ART_ROOM_ITEMS,
 ];
 
+// ── Project Meeting Rooms ──────────────────────────────────────────
+const PROJECT_ROOM_COLORS = [
+  "#4A90D9",  // Alpha - Azul
+  "#E74C3C",  // Beta - Vermelho
+  "#2ECC71",  // Gamma - Verde
+  "#F39C12",  // Delta - Laranja
+  "#9B59B6",  // Epsilon - Roxo
+  "#1ABC9C",  // Zeta - Turquesa
+];
+
+function createProjectRoom(x: number, y: number, color: string): FurnitureSeed[] {
+  const rw = 180, rh = 90;
+  const cx = x + rw / 2, cy = y + rh / 2;
+  return [
+    { type: "wall", x, y, w: rw, h: WALL_THICKNESS },
+    { type: "wall", x, y, w: WALL_THICKNESS, h: rh },
+    { type: "wall", x: x + rw - WALL_THICKNESS, y, w: WALL_THICKNESS, h: rh },
+    { type: "wall", x, y: y + rh - WALL_THICKNESS, w: 70, h: WALL_THICKNESS },
+    { type: "door", x: x + 70, y: y + rh - WALL_THICKNESS, w: DOOR_LENGTH, h: DOOR_THICKNESS, facing: 0 },
+    { type: "wall", x: x + 110, y: y + rh - WALL_THICKNESS, w: 70, h: WALL_THICKNESS },
+    { type: "table_rect", x: cx - 30, y: cy - 14, w: 60, h: 28 },
+    { type: "chair", x: cx, y: cy - 25, facing: 180 },
+    { type: "chair", x: cx, y: cy + 25, facing: 0 },
+    { type: "chair", x: cx - 30, y: cy, facing: 90 },
+    { type: "chair", x: cx + 30, y: cy, facing: 270 },
+    { type: "beanbag", x: x + 20, y: y + 20, color, facing: 135 },
+  ];
+}
+
+const PROJECT_ROOMS_ITEMS: FurnitureSeed[] = [
+  ...createProjectRoom(465, 58, PROJECT_ROOM_COLORS[0]),
+  ...createProjectRoom(680, 58, PROJECT_ROOM_COLORS[1]),
+  ...createProjectRoom(895, 58, PROJECT_ROOM_COLORS[2]),
+  ...createProjectRoom(465, 163, PROJECT_ROOM_COLORS[3]),
+  ...createProjectRoom(680, 163, PROJECT_ROOM_COLORS[4]),
+  ...createProjectRoom(895, 163, PROJECT_ROOM_COLORS[5]),
+];
+
 const DEFAULT_FURNITURE: FurnitureSeed[] = [
   { type: "round_table", x: 50, y: 50, r: 90 },
   { type: "chair", x: 130, y: 50, facing: 0 },
@@ -555,6 +593,7 @@ const DEFAULT_FURNITURE: FurnitureSeed[] = [
   ...DEFAULT_ART_ROOM_ITEMS,
   DEFAULT_SMS_BOOTH,
   { type: "chair", x: 100, y: 200, facing: 180 },
+  ...PROJECT_ROOMS_ITEMS,
 ];
 
 export const materializeDefaults = (
@@ -797,4 +836,13 @@ export const ensureOfficeQaLab = (items: FurnitureItem[]): FurnitureItem[] => {
     ...items,
     ...DEFAULT_QA_LAB_ITEMS.map((item) => ({ ...item, _uid: nextUid() })),
   ];
+};
+
+export const ensureProjectRooms = (items: FurnitureItem[]): FurnitureItem[] => {
+  const projectColors = new Set(PROJECT_ROOM_COLORS);
+  const hasRooms = items.some(
+    (item) => item.type === "beanbag" && projectColors.has(item.color ?? ""),
+  );
+  if (hasRooms) return items;
+  return [...items, ...PROJECT_ROOMS_ITEMS.map((item) => ({ ...item, _uid: nextUid() }))];
 };

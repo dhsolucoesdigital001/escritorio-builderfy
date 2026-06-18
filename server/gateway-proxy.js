@@ -262,8 +262,9 @@ function createGatewayProxy(options) {
       // causes the gateway to reject the connect with 1002 Protocol Error.
       // Token auth and device auth can coexist — both are passed to the gateway.
       if (upstreamAdapterType === "openclaw") {
-        client.id = "webchat-ui";
-        client.mode = client.mode || "webchat";
+        // Preserve original client.id and mode from the browser's connect frame.
+        // The gateway validates client identity and version for authorization.
+        // Do NOT overwrite client.id or client.mode here.
         connectParams.client = client;
         // Do NOT remove device auth — it contains the nonce from connect.challenge
         // Only strip deviceToken if present (different from device auth)

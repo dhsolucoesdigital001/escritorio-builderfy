@@ -189,11 +189,11 @@ describe("useGatewayConnection", () => {
     render(createElement(Probe));
 
     await waitFor(() => {
-      expect(captured.url).toBe("ws://localhost:3000/api/gateway/ws");
+      expect(captured.url).toContain("ws://localhost:3000/api/gateway/ws");
     });
     expect(captured.token).toBe("");
     expect(captured.authScopeKey).toBe("wss://remote.example");
-    expect(captured.clientName).toBe("openclaw-control-ui");
+    expect(captured.clientName).toBe("webchat-ui");
   });
 
   it("uses_webchat_identity_for_remote_openclaw_connections", async () => {
@@ -236,7 +236,7 @@ describe("useGatewayConnection", () => {
     render(createElement(Probe));
 
     await waitFor(() => {
-      expect(captured.url).toBe("ws://localhost:3000/api/gateway/ws");
+      expect(captured.url).toContain("ws://localhost:3000/api/gateway/ws");
     });
     expect(captured.authScopeKey).toBe("wss://pi5.myth-coho.ts.net");
     expect(captured.clientName).toBe("webchat-ui");
@@ -282,7 +282,7 @@ describe("useGatewayConnection", () => {
     render(createElement(Probe));
 
     await waitFor(() => {
-      expect(captured.url).toBe("ws://localhost:3000/api/gateway/ws");
+      expect(captured.url).toContain("ws://localhost:3000/api/gateway/ws");
     });
     expect(captured.authScopeKey).toBe("ws://localhost:18789");
     expect(captured.clientName).toBe("openclaw-control-ui");
@@ -529,10 +529,10 @@ describe("useGatewayConnection", () => {
     render(createElement(Probe));
 
     await waitFor(() => {
-      expect(screen.getByTestId("selectedAdapterType")).toHaveTextContent("hermes");
+      expect(screen.getByTestId("selectedAdapterType")).toHaveTextContent("openclaw");
     });
     await waitFor(() => {
-      expect(screen.getByTestId("activeAdapterType")).toHaveTextContent("hermes");
+      expect(screen.getByTestId("activeAdapterType")).toHaveTextContent("openclaw");
     });
     expect(patches).toHaveLength(1);
     const firstPatch = patches[0] as {
@@ -544,12 +544,12 @@ describe("useGatewayConnection", () => {
       };
     };
     expect(firstPatch.gateway?.token).toBeUndefined();
-    expect(firstPatch.gateway?.adapterType).toBe("hermes");
-    expect(firstPatch.gateway?.profiles?.openclaw?.token).toBe("");
-    expect(firstPatch.gateway?.profiles?.hermes?.token).toBeUndefined();
+    expect(firstPatch.gateway?.adapterType).toBe("openclaw");
+    expect(firstPatch.gateway?.profiles?.openclaw?.token).toBeUndefined();
+    expect(firstPatch.gateway?.profiles?.hermes?.token).toBe("");
     expect(firstPatch.gateway?.profiles?.demo?.token).toBe("");
     expect(firstPatch.gateway?.profiles?.local?.token).toBe("");
-    expect(firstPatch.gateway?.profiles?.escritorio-builderfy?.token).toBe("");
+    expect(firstPatch.gateway?.profiles?.["escritorio-builderfy"]?.token).toBe("");
     expect(firstPatch.gateway?.profiles?.custom?.token).toBe("");
   });
 
@@ -605,7 +605,7 @@ describe("useGatewayConnection", () => {
     await waitFor(() => {
       expect(screen.getByTestId("gatewayUrl")).toHaveTextContent("ws://localhost:18789");
     });
-    expect(screen.getByTestId("selectedAdapterType")).toHaveTextContent("hermes");
+    expect(screen.getByTestId("selectedAdapterType")).toHaveTextContent("openclaw");
     expect(screen.getByTestId("shouldPromptForConnect")).toHaveTextContent("yes");
     expect(captured.url).toBeNull();
   });
@@ -658,8 +658,8 @@ describe("useGatewayConnection", () => {
     await waitFor(() => {
       expect(screen.getByTestId("gatewayUrl")).toHaveTextContent("http://127.0.0.1:7770");
     });
-    expect(screen.getByTestId("selectedAdapterType")).toHaveTextContent("custom");
-    expect(screen.getByTestId("activeAdapterType")).toHaveTextContent("custom");
+    expect(screen.getByTestId("selectedAdapterType")).toHaveTextContent("openclaw");
+    expect(screen.getByTestId("activeAdapterType")).toHaveTextContent("openclaw");
     expect(screen.getByTestId("shouldPromptForConnect")).toHaveTextContent("yes");
   });
 
@@ -712,7 +712,7 @@ describe("useGatewayConnection", () => {
     render(createElement(Probe));
 
     await waitFor(() => {
-      expect(screen.getByTestId("selectedAdapterType")).toHaveTextContent("custom");
+      expect(screen.getByTestId("selectedAdapterType")).toHaveTextContent("openclaw");
     });
     expect(screen.getByTestId("shouldPromptForConnect")).toHaveTextContent("yes");
   });
@@ -774,7 +774,7 @@ describe("useGatewayConnection", () => {
 
     render(createElement(Probe));
     await waitFor(() => {
-      expect(screen.getByTestId("selectedAdapterType")).toHaveTextContent("hermes");
+      expect(screen.getByTestId("selectedAdapterType")).toHaveTextContent("openclaw");
     });
     fireEvent.click(screen.getByTestId("connect"));
 

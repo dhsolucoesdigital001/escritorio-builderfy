@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.1.0] - 2026-06-18
+
+3D Office stabilization, WebGL resilience, and OpenClaw gateway hardening.
+
+### Fixed
+
+- Stabilized Canvas key to prevent infinite WebGL remounts in `RetroOffice3D.tsx` and `OfficeScreen.tsx`.
+- Added a WebGL `ErrorBoundary` for graceful error recovery when the 3D context is lost or fails to initialize.
+- Added `preserveDrawingBuffer` and `failIfMajorPerformanceCaveat` options to the React Three Fiber `Canvas` to avoid blank frames and silent renderer downgrades.
+- Replaced the deprecated `THREE.Clock` with a ref-based delta accumulator to remove console warnings and avoid double-stepped frames.
+- Fixed Gateway WebSocket reconnection loop in `server/gateway-proxy.js` (exponential backoff, max attempts, allowlist logging cleanup).
+- `claw3doctor` / `claw3doctor-core` refinements and upstream-allowlist logging cleanups.
+
+### Added
+
+- Optional FPS debug overlay for the 3D office surface.
+- Gateway health endpoint on the office server for liveness checks.
+- Updated furniture defaults and room layouts in `src/features/retro-office/core/furnitureDefaults.ts`.
+- New 3D components under `src/features/retro-office/components/` (jukebox and supporting props).
+- Patch fixtures under `patches/` for the 3D office and gateway-proxy work.
+
+### Tests
+
+- Updated unit coverage for `useGatewayConnection`, `gatewayProxy`, `gatewayEnvDefaults`, `agentChatPanel` controls, `agentFleetHydration`, `accessGate`, and `claw3doctor` to match the new reconnect/health behavior (`tests/unit/`).
+- Updated the Kanban board e2e spec to align with the current office navigation flow.
+
+### Notes
+
+- Bumps the in-repo app version from `0.1.4` to `1.1.0`. Cut the GitHub release/tag as `v1.1.0`.
+- This release focuses on stabilizing the 3D office surface and the OpenClaw gateway integration ahead of broader office-system work in upcoming versions.
+
 ## [0.1.4] - 2026-04-23
 
 Runtime Profiles, Multi-Floor Offices, Remote Collaboration, and Diagnostics.

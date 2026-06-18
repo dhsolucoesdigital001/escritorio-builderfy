@@ -24,13 +24,15 @@ const PreviewFigure = ({
     reportedReadyRef.current = false;
   }, [profile]);
 
-  useFrame((state) => {
+  const animElapsedRef = useRef(0);
+  useFrame((_state, delta) => {
+    animElapsedRef.current += delta;
     if (!reportedReadyRef.current) {
       reportedReadyRef.current = true;
       onFirstFrame();
     }
     if (!groupRef.current) return;
-    groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.45) * 0.35 + 0.25;
+    groupRef.current.rotation.y = Math.sin(animElapsedRef.current * 0.45) * 0.35 + 0.25;
   });
 
   const skin = profile.body.skinTone;

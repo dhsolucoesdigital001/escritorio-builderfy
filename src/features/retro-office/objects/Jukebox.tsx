@@ -63,12 +63,14 @@ export function JukeboxModel({
   const tint = (enabledColor: string, disabledColor: string) =>
     enabled ? enabledColor : disabledColor;
 
+  const elapsedRef = useRef(0);
   useFrame((_state, delta) => {
+    elapsedRef.current += delta;
     if (recordRef.current) {
       recordRef.current.rotation.y += playing ? delta * 2 : delta * 0.3;
     }
     if (glowRef.current && playing) {
-      const pulse = Math.sin(_state.clock.elapsedTime * 4) * 0.3 + 0.7;
+      const pulse = Math.sin(elapsedRef.current * 4) * 0.3 + 0.7;
       glowRef.current.intensity = pulse * 2;
     }
   });

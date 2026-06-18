@@ -11,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import { MessageSquare, ChevronDown, ChevronLeft, ChevronRight, Mic } from "lucide-react";
 import { RetroOffice3D } from "@/features/retro-office/RetroOffice3D";
+import { WebGLErrorBoundary } from "@/features/retro-office/components/WebGLErrorBoundary";
 import type { OfficeAgent } from "@/features/retro-office/core/types";
 import { RunningAvatarLoader } from "@/features/agents/components/RunningAvatarLoader";
 import { GatewayConnectScreen } from "@/features/agents/components/GatewayConnectScreen";
@@ -4758,7 +4759,8 @@ export function OfficeScreen({
         activeAdapterType={(selectedAdapterType as FloorProvider) ?? null}
       />
       <section className="relative h-full min-h-0 min-w-0 overflow-hidden">
-        <RetroOffice3D
+        <WebGLErrorBoundary>
+          <RetroOffice3D
           key={activeFloor.id}
           agents={allVisibleAgents}
           storageNamespace={activeFloor.id}
@@ -4991,6 +4993,7 @@ export function OfficeScreen({
             errorMessage={kanbanInstallProgress.error}
           />
         ) : null}
+        </WebGLErrorBoundary>
       </section>
 
       {showEmptyFleetBanner ? (

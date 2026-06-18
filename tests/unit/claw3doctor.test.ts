@@ -18,7 +18,7 @@ import {
   shouldRunHermesChecks,
   shouldRunOpenClawChecks,
   summarizeChecks,
-} from "../../scripts/lib/escritorio-builderfyoctor-core.mjs";
+} from "../../scripts/lib/claw3doctor-core.mjs";
 
 describe("escritorio-builderfyoctor core", () => {
   it("resolves selected runtime from settings profiles", () => {

@@ -1,7 +1,7 @@
 const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 
 /** Studio access token required by the office server's access gate for WebSocket upgrades. */
-const STUDIO_ACCESS_TOKEN = "claw3d-local-dev";
+const STUDIO_ACCESS_TOKEN = "20c63ad1b3bc6e23dd388e124f82f3bd9598d224e1974bb2";
 
 /**
  * Resolve the WebSocket URL for connecting to the gateway via the Studio proxy.

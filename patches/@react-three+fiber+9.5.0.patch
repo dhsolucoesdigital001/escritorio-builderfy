@@ -1,0 +1,26 @@
+diff --git a/dist/events-238e0986.cjs.prod.js b/dist/events-238e0986.cjs.prod.js
+--- a/dist/events-238e0986.cjs.prod.js
++++ b/dist/events-238e0986.cjs.prod.js
+@@ -1069,7 +1069,7 @@ const advance = (timestamp, runGlobalEffects = true, state, frame) => {
+         const clock = get().clock;
+         // if frameloop === "never" clock.elapsedTime is updated using advance(timestamp)
+         // it's also considered the initial delta calculation it's at 0, so we can skip the warning
+-        clock.elapsedTime = 0;
++        // clock.elapsedTime = 0; // THREE.Clock deprecated - suppress reset
+       }
+       // Decrease delta to avoid triggering render / immer listeners when debugging
+       if (!startedRef.current) {
+@@ -7824,12 +7824,12 @@ const createStore = (invalidating = true) => {
+     const state = get();
+     // Check for deprecated clock, prefer using delta
+     if (typeof state.clock !== 'number') {
+-      delta = state.clock.getDelta();
++      delta = state.clock.getDelta?.() ?? 0;
+       // Disallow delta values > 0.5 to prevent flickering when the browser sleeps or throttles
+       if (!state.internal.frameloop === 'demand' && delta > 0.5) {
+         delta = 0.016;
+       }
+-      state.clock.elapsedTime += delta;
++      // state.clock.elapsedTime += delta;
+     }
+```

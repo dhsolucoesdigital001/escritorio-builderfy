@@ -29,7 +29,7 @@ describe("createAccessGate", () => {
     };
 
     const handled = gate.handleHttp(
-      { url: "/api/studio", headers: { host: "example.test" } },
+      { url: "/api/settings", headers: { host: "example.test" } },
       res
     );
 
@@ -73,7 +73,7 @@ describe("createAccessGate", () => {
     for (let index = 0; index < 9; index++) {
       const res = createResponse();
       gate.handleHttp(
-        { url: "/api/studio", headers: {}, socket: { remoteAddress: "127.0.0.1" } },
+        { url: "/api/settings", headers: {}, socket: { remoteAddress: "127.0.0.1" } },
         res
       );
       expect(res.statusCode).toBe(401);
@@ -81,7 +81,7 @@ describe("createAccessGate", () => {
 
     const limited = createResponse();
     gate.handleHttp(
-      { url: "/api/studio", headers: {}, socket: { remoteAddress: "127.0.0.1" } },
+      { url: "/api/settings", headers: {}, socket: { remoteAddress: "127.0.0.1" } },
       limited
     );
 
@@ -116,7 +116,7 @@ describe("createAccessGate", () => {
     for (let index = 0; index < 10; index++) {
       const res = createResponse();
       gate.handleHttp(
-        { url: "/api/studio", headers: {}, socket: { remoteAddress: "127.0.0.1" } },
+        { url: "/api/settings", headers: {}, socket: { remoteAddress: "127.0.0.1" } },
         res
       );
     }
@@ -131,7 +131,7 @@ describe("createAccessGate", () => {
     const recovered = createResponse();
     gate.handleHttp(
       {
-        url: "/api/studio",
+        url: "/api/settings",
         headers: { cookie: "studio_access=abc" },
         socket: { remoteAddress: "127.0.0.1" },
       },
@@ -142,7 +142,7 @@ describe("createAccessGate", () => {
 
     const afterReset = createResponse();
     gate.handleHttp(
-      { url: "/api/studio", headers: {}, socket: { remoteAddress: "127.0.0.1" } },
+      { url: "/api/settings", headers: {}, socket: { remoteAddress: "127.0.0.1" } },
       afterReset
     );
 

@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-describe("loadLocalGatewayDefaults with ESCRITORIO-BUILDERFY_GATEWAY_URL", () => {
+describe("loadLocalGatewayDefaults with ESCRITORIO_BUILDERFY_GATEWAY_URL", () => {
   const originalEnv = { ...process.env };
 
   afterEach(() => {
@@ -11,9 +11,9 @@ describe("loadLocalGatewayDefaults with ESCRITORIO-BUILDERFY_GATEWAY_URL", () =>
     vi.resetModules();
   });
 
-  it("returns env-based defaults when ESCRITORIO-BUILDERFY_GATEWAY_URL is set and no openclaw.json exists", async () => {
-    process.env.ESCRITORIO-BUILDERFY_GATEWAY_URL = "ws://my-gateway:18789";
-    process.env.ESCRITORIO-BUILDERFY_GATEWAY_TOKEN = "my-token";
+  it("returns env-based defaults when ESCRITORIO_BUILDERFY_GATEWAY_URL is set and no openclaw.json exists", async () => {
+    process.env["ESCRITORIO_BUILDERFY_GATEWAY_URL"] = "ws://my-gateway:18789";
+    process.env["ESCRITORIO_BUILDERFY_GATEWAY_TOKEN"] = "my-token";
     process.env.OPENCLAW_STATE_DIR = "/tmp/escritorio-builderfy-test-nonexistent-" + Date.now();
     const { loadLocalGatewayDefaults } = await import(
       "../../src/lib/studio/settings-store"
@@ -30,8 +30,8 @@ describe("loadLocalGatewayDefaults with ESCRITORIO-BUILDERFY_GATEWAY_URL", () =>
   });
 
   it("returns env-based defaults with empty token when only URL is set", async () => {
-    process.env.ESCRITORIO-BUILDERFY_GATEWAY_URL = "ws://my-gateway:18789";
-    delete process.env.ESCRITORIO-BUILDERFY_GATEWAY_TOKEN;
+    process.env["ESCRITORIO_BUILDERFY_GATEWAY_URL"] = "ws://my-gateway:18789";
+    delete process.env["ESCRITORIO_BUILDERFY_GATEWAY_TOKEN"];
     process.env.OPENCLAW_STATE_DIR = "/tmp/escritorio-builderfy-test-nonexistent-" + Date.now();
     const { loadLocalGatewayDefaults } = await import(
       "../../src/lib/studio/settings-store"
@@ -48,8 +48,8 @@ describe("loadLocalGatewayDefaults with ESCRITORIO-BUILDERFY_GATEWAY_URL", () =>
   });
 
   it("returns null when no env var and no openclaw.json", async () => {
-    delete process.env.ESCRITORIO-BUILDERFY_GATEWAY_URL;
-    delete process.env.ESCRITORIO-BUILDERFY_GATEWAY_TOKEN;
+    delete process.env["ESCRITORIO_BUILDERFY_GATEWAY_URL"];
+    delete process.env["ESCRITORIO_BUILDERFY_GATEWAY_TOKEN"];
     process.env.OPENCLAW_STATE_DIR = "/tmp/escritorio-builderfy-test-nonexistent-" + Date.now();
     const { loadLocalGatewayDefaults } = await import(
       "../../src/lib/studio/settings-store"
@@ -59,9 +59,9 @@ describe("loadLocalGatewayDefaults with ESCRITORIO-BUILDERFY_GATEWAY_URL", () =>
   });
 
   it("prefers env vars over openclaw.json when both exist while preserving the file-backed profile", async () => {
-    process.env.ESCRITORIO-BUILDERFY_GATEWAY_URL = "ws://env-gateway:18789";
-    process.env.ESCRITORIO-BUILDERFY_GATEWAY_TOKEN = "env-token";
-    process.env.ESCRITORIO-BUILDERFY_GATEWAY_ADAPTER_TYPE = "hermes";
+    process.env["ESCRITORIO_BUILDERFY_GATEWAY_URL"] = "ws://env-gateway:18789";
+    process.env["ESCRITORIO_BUILDERFY_GATEWAY_TOKEN"] = "env-token";
+    process.env["ESCRITORIO_BUILDERFY_GATEWAY_ADAPTER_TYPE"] = "hermes";
 
     const stateDir = fs.mkdtempSync(path.join(os.tmpdir(), "escritorio-builderfy-gateway-defaults-"));
     process.env.OPENCLAW_STATE_DIR = stateDir;
@@ -92,10 +92,10 @@ describe("loadLocalGatewayDefaults with ESCRITORIO-BUILDERFY_GATEWAY_URL", () =>
     });
   });
 
-  it("uses ESCRITORIO-BUILDERFY_GATEWAY_ADAPTER_TYPE for Hermes env defaults", async () => {
-    process.env.ESCRITORIO-BUILDERFY_GATEWAY_URL = "ws://my-hermes:18789";
-    process.env.ESCRITORIO-BUILDERFY_GATEWAY_ADAPTER_TYPE = "hermes";
-    delete process.env.ESCRITORIO-BUILDERFY_GATEWAY_TOKEN;
+  it("uses ESCRITORIO_BUILDERFY_GATEWAY_ADAPTER_TYPE for Hermes env defaults", async () => {
+    process.env["ESCRITORIO_BUILDERFY_GATEWAY_URL"] = "ws://my-hermes:18789";
+    process.env["ESCRITORIO_BUILDERFY_GATEWAY_ADAPTER_TYPE"] = "hermes";
+    delete process.env["ESCRITORIO_BUILDERFY_GATEWAY_TOKEN"];
     process.env.OPENCLAW_STATE_DIR = "/tmp/escritorio-builderfy-test-nonexistent-" + Date.now();
     const { loadLocalGatewayDefaults } = await import(
       "../../src/lib/studio/settings-store"
@@ -112,8 +112,8 @@ describe("loadLocalGatewayDefaults with ESCRITORIO-BUILDERFY_GATEWAY_URL", () =>
   });
 
   it("exposes local Hermes adapter defaults when only HERMES_ADAPTER_PORT is set", async () => {
-    delete process.env.ESCRITORIO-BUILDERFY_GATEWAY_URL;
-    delete process.env.ESCRITORIO-BUILDERFY_GATEWAY_TOKEN;
+    delete process.env["ESCRITORIO_BUILDERFY_GATEWAY_URL"];
+    delete process.env["ESCRITORIO_BUILDERFY_GATEWAY_TOKEN"];
     process.env.HERMES_ADAPTER_PORT = "19444";
     process.env.OPENCLAW_STATE_DIR = "/tmp/escritorio-builderfy-test-nonexistent-" + Date.now();
     const { loadLocalGatewayDefaults } = await import(
@@ -131,9 +131,9 @@ describe("loadLocalGatewayDefaults with ESCRITORIO-BUILDERFY_GATEWAY_URL", () =>
   });
 
   it("prefers Hermes adapter defaults over file-backed OpenClaw defaults while preserving the OpenClaw profile", async () => {
-    delete process.env.ESCRITORIO-BUILDERFY_GATEWAY_URL;
-    delete process.env.ESCRITORIO-BUILDERFY_GATEWAY_TOKEN;
-    delete process.env.ESCRITORIO-BUILDERFY_GATEWAY_ADAPTER_TYPE;
+    delete process.env["ESCRITORIO_BUILDERFY_GATEWAY_URL"];
+    delete process.env["ESCRITORIO_BUILDERFY_GATEWAY_TOKEN"];
+    delete process.env["ESCRITORIO_BUILDERFY_GATEWAY_ADAPTER_TYPE"];
     process.env.HERMES_ADAPTER_PORT = "19444";
 
     const stateDir = fs.mkdtempSync(path.join(os.tmpdir(), "escritorio-builderfy-gateway-defaults-"));
@@ -166,9 +166,9 @@ describe("loadLocalGatewayDefaults with ESCRITORIO-BUILDERFY_GATEWAY_URL", () =>
   });
 
   it("prefers explicit env adapter defaults over file-backed OpenClaw defaults", async () => {
-    process.env.ESCRITORIO-BUILDERFY_GATEWAY_URL = "ws://env-gateway:19999";
-    process.env.ESCRITORIO-BUILDERFY_GATEWAY_TOKEN = "env-token";
-    process.env.ESCRITORIO-BUILDERFY_GATEWAY_ADAPTER_TYPE = "hermes";
+    process.env["ESCRITORIO_BUILDERFY_GATEWAY_URL"] = "ws://env-gateway:19999";
+    process.env["ESCRITORIO_BUILDERFY_GATEWAY_TOKEN"] = "env-token";
+    process.env["ESCRITORIO_BUILDERFY_GATEWAY_ADAPTER_TYPE"] = "hermes";
 
     const stateDir = fs.mkdtempSync(path.join(os.tmpdir(), "escritorio-builderfy-gateway-defaults-"));
     process.env.OPENCLAW_STATE_DIR = stateDir;

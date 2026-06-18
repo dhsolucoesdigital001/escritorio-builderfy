@@ -88,6 +88,7 @@ import {
   ensureOfficeSmsBooth,
   ensureOfficeJukebox,
   ensureOfficeServerRoom,
+  ensureProjectRooms,
   isRetiredPingPongLamp,
   materializeDefaults,
   type OfficeLayoutPreset,
@@ -2221,15 +2222,16 @@ const buildInitialFurnitureLayout = (
   storageNamespace: string,
   layoutPreset: OfficeLayoutPreset,
 ): FurnitureItem[] =>
-  ensureOfficeKanbanBoard(
-    ensureOfficeJukebox(
-      ensureOfficeQaLab(
-        ensureOfficeGymRoom(
-          ensureOfficeServerRoom(
-            ensureOfficePhoneBooth(
-              ensureOfficeSmsBooth(
-                ensureOfficeAtm(
-                  ensureOfficePingPongTable(
+  ensureProjectRooms(
+    ensureOfficeKanbanBoard(
+      ensureOfficeJukebox(
+        ensureOfficeQaLab(
+          ensureOfficeGymRoom(
+            ensureOfficeServerRoom(
+              ensureOfficePhoneBooth(
+                ensureOfficeSmsBooth(
+                  ensureOfficeAtm(
+                    ensureOfficePingPongTable(
                     loadFurniture(storageNamespace) ?? materializeDefaults(layoutPreset),
                   ),
                 ),
@@ -2237,6 +2239,7 @@ const buildInitialFurnitureLayout = (
             ),
           ),
         ),
+      ),
       ),
     ),
   );
@@ -2634,16 +2637,18 @@ export function RetroOffice3D({
     () => ({ pos: CAM_POS, target: cameraTarget, zoom: cameraZoom }),
     [CAM_POS, cameraTarget, cameraZoom]
   );
-  const canvasResetKey = useMemo(
-    () =>
-      [
-        remoteOfficeEnabled ? "remote" : "local",
-        gatewayStatus ?? "unknown",
-        String(agents.length),
-        String(officeCenterSignal),
-      ].join(":"),
-    [agents.length, gatewayStatus, officeCenterSignal, remoteOfficeEnabled],
+  // Stable canvas key: only remount Canvas when critical layout props change.
+  // Previously included agents.length & gatewayStatus, which caused frequent
+  // Canvas remounts → WebGL context loss loop. Now keyed only on layout-affecting props.
+  const canvasLayoutKeyRef = useRef<string>(
+    [remoteOfficeEnabled ? "remote" : "local", String(officeCenterSignal)].join(":")
   );
+  const prevLayoutKey = canvasLayoutKeyRef.current;
+  const currentLayoutKey = [remoteOfficeEnabled ? "remote" : "local", String(officeCenterSignal)].join(":");
+  if (currentLayoutKey !== prevLayoutKey) {
+    canvasLayoutKeyRef.current = currentLayoutKey;
+  }
+  const canvasResetKey = canvasLayoutKeyRef.current;
   // New Idea 7: heatmap mode.
   const [heatmapMode, setHeatmapMode] = useState(false);
   const [trailMode, setTrailMode] = useState(false);
@@ -2652,6 +2657,7 @@ export function RetroOffice3D({
   const [moodByAgentId, setMoodByAgentId] = useState<
     Record<string, { emoji: string; ts: number }>
   >({});
+  const [canvasResetCounter, setCanvasResetCounter] = useState(0);
   const [janitorActors, setJanitorActors] = useState<JanitorActor[]>([]);
   const seenCleaningCueIdsRef = useRef<Set<string>>(new Set());
   // E3 Idea 3: spotlight.
@@ -5183,7 +5189,7 @@ export function RetroOffice3D({
         */}
         {!immersiveOverlayActive ? (
           <Canvas
-            key={canvasResetKey}
+            key={`${canvasResetKey}-${canvasResetCounter}`}
             orthographic
             dpr={[0.85, 1.5]}
             camera={{
@@ -5193,8 +5199,36 @@ export function RetroOffice3D({
               far: 100,
             }}
             shadows={{ type: THREE.PCFShadowMap }}
-            gl={{ antialias: true, powerPreference: "high-performance" }}
+            gl={{ antialias: true, powerPreference: "high-performance", preserveDrawingBuffer: true, failIfMajorPerformanceCaveat: false }}
             style={{ width: "100%", height: "100%" }}
+            onCreated={({ gl }) => {
+              // WebGL context lost recovery handler with backoff
+              let recoveryAttempts = 0;
+              const MAX_RECOVERY_ATTEMPTS = 3;
+              let recoveryTimer: ReturnType<typeof setTimeout> | null = null;
+              gl.domElement.addEventListener("webglcontextlost", (event) => {
+                event.preventDefault();
+                if (recoveryTimer) {
+                  clearTimeout(recoveryTimer);
+                  recoveryTimer = null;
+                }
+                recoveryAttempts++;
+                if (recoveryAttempts > MAX_RECOVERY_ATTEMPTS) {
+                  console.error("[RetroOffice3D] WebGL context lost too many times. Giving up recovery.");
+                  return;
+                }
+                const backoffMs = Math.min(1000 * Math.pow(2, recoveryAttempts - 1), 8000);
+                console.warn("[RetroOffice3D] WebGL context lost (attempt", recoveryAttempts, "/", MAX_RECOVERY_ATTEMPTS, "). Scheduling recovery in", backoffMs, "ms...");
+                recoveryTimer = setTimeout(() => {
+                  recoveryTimer = null;
+                  console.log("[RetroOffice3D] Attempting WebGL context recovery...");
+                  setCanvasResetCounter((k) => k + 1);
+                }, backoffMs);
+              });
+              gl.domElement.addEventListener("webglcontextrestored", () => {
+                console.log("[RetroOffice3D] WebGL context restored.");
+              });
+            }}
             onPointerUp={() => {
               if (drag.kind === "moving") setDrag({ kind: "idle" });
             }}

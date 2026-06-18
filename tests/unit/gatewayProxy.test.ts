@@ -537,7 +537,7 @@ describe("createGatewayProxy", () => {
 
     const proxyHttp = await import("node:http").then((m) => m.createServer());
     const proxy = createGatewayProxy({
-      loadUpstreamSettings: async () => ({ url: upstreamUrl, token: "" }),
+      loadUpstreamSettings: async () => ({ url: upstreamUrl, token: "", adapterType: "hermes" }),
       allowWs: (req: { url?: string }) => req.url === "/api/gateway/ws",
       logError: () => {},
     });

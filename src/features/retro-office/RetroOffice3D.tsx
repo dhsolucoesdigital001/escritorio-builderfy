@@ -67,9 +67,12 @@ import {
   DESK_STICKY_MS,
   DOOR_LENGTH,
   DOOR_THICKNESS,
+  EAST_WING_ROOM_HEIGHT,
   ELEVATION_STEP,
+  GYM_ROOM_WIDTH,
   PING_PONG_APPROACH_SPEED,
   PING_PONG_SESSION_MS,
+  QA_LAB_WIDTH,
   ROTATION_STEP_DEG,
   SCALE,
   SEPARATION_STRENGTH,
@@ -209,6 +212,13 @@ import {
   FloorAndWalls as SceneFloorAndWalls,
   WallPictures as SceneWallPictures,
 } from "@/features/retro-office/scene/environment";
+import {
+  DebugFpsProbe,
+  DebugOverlayGate,
+  markDebugCanvasReset,
+  updateDebugRoomStats,
+  useDebugStore,
+} from "@/features/retro-office/components/DebugOverlay";
 import {
   CAMERA_PRESETS as CAMERA_PRESET_MAP,
   CameraAnimator as CameraPresetAnimator,
@@ -2649,6 +2659,19 @@ export function RetroOffice3D({
     canvasLayoutKeyRef.current = currentLayoutKey;
   }
   const canvasResetKey = canvasLayoutKeyRef.current;
+  // AGENT-1: one-time diagnostic log of the resolved layout key so we can
+  // confirm in DevTools that the agents array is NOT a contributor. The
+  // computed key only includes `remoteOfficeEnabled` + `officeCenterSignal`,
+  // and it’s stored in a useRef so identical layout values never produce a
+  // new key on re-render.
+  useEffect(() => {
+    console.log(
+      "[RetroOffice3D] canvas layout key resolved to: %s (agents=%d, gateway=%s)",
+      canvasResetKey,
+      agents.length,
+      gatewayStatus,
+    );
+  }, [canvasResetKey, agents.length, gatewayStatus]);
   // New Idea 7: heatmap mode.
   const [heatmapMode, setHeatmapMode] = useState(false);
   const [trailMode, setTrailMode] = useState(false);
@@ -2665,6 +2688,10 @@ export function RetroOffice3D({
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const orbitRef = useRef<any>(null);
+  // AGENT-1: shared debug store used by DebugOverlay (DOM) and
+  // DebugFpsProbe (inside Canvas). Stable across renders so the FPS probe
+  // and overlay read the same ref instance.
+  const debugStore = useDebugStore();
   // Follow cam: which agent to trail with a third-person perspective camera.
   const [followAgentId, setFollowAgentId] = useState<string | null>(null);
   const followAgentIdRef = useRef<string | null>(null);
@@ -2799,6 +2826,35 @@ export function RetroOffice3D({
   useEffect(() => {
     furnitureRef.current = furniture;
   }, [furniture]);
+
+  // AGENT-1: push live room statistics into the shared debug store so the
+  // DebugOverlay can render the same numbers the FloorAndWalls component
+  // uses internally. We re-derive on every render — it's just a few
+  // multiplications, no allocation pressure.
+  const roomStats = useMemo(() => {
+    const roomFloorInset = 0.08;
+    const gymWidth = Math.max(0, GYM_ROOM_WIDTH * SCALE);
+    const qaWidth = Math.max(0, QA_LAB_WIDTH * SCALE);
+    const roomH = EAST_WING_ROOM_HEIGHT * SCALE;
+    return {
+      gymFloorWidth: Math.max(0, gymWidth - roomFloorInset * 2),
+      qaFloorWidth: Math.max(0, qaWidth - roomFloorInset * 2),
+      roomFloorHeight: Math.max(0, roomH - roomFloorInset * 2),
+      districtWidth: CANVAS_W * SCALE,
+      districtHeight: CANVAS_H * SCALE,
+      showRemoteOffice: remoteOfficeEnabled,
+      wallCount: furniture.filter((item) => item.type === "wall").length,
+      furnitureCount: furniture.length,
+    };
+  }, [furniture, remoteOfficeEnabled]);
+  useEffect(() => {
+    updateDebugRoomStats(
+      debugStore,
+      roomStats,
+      gatewayStatus,
+      String(activeAdapterType ?? "unknown"),
+    );
+  }, [debugStore, gatewayStatus, activeAdapterType, roomStats]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -5178,6 +5234,13 @@ export function RetroOffice3D({
         onMouseUp={() => setSpaceDragging(false)}
         onDoubleClick={() => orbitRef.current?.reset()}
       >
+        {/* AGENT-1: live debug HUD. Pure DOM, doesn't affect Canvas or
+            WebGL.  Hidden by default unless the studio runtime sets the
+            `?debug=3d` query param.  We use a query-string toggle so the
+            overlay never accidentally lands in production snapshots. */}
+        <DebugOverlayGate
+          store={debugStore}
+        />
         {/*
           Key fixes vs previous version:
           1. `orthographic` prop + `camera` prop on Canvas → R3F creates the camera
@@ -5223,10 +5286,12 @@ export function RetroOffice3D({
                   recoveryTimer = null;
                   console.log("[RetroOffice3D] Attempting WebGL context recovery...");
                   setCanvasResetCounter((k) => k + 1);
+                  markDebugCanvasReset(debugStore);
                 }, backoffMs);
               });
               gl.domElement.addEventListener("webglcontextrestored", () => {
                 console.log("[RetroOffice3D] WebGL context restored.");
+                markDebugCanvasReset(debugStore);
               });
             }}
             onPointerUp={() => {
@@ -5236,6 +5301,14 @@ export function RetroOffice3D({
             {/* Ensure camera looks at the active office target after mount. */}
             <CameraRig target={cameraTarget} />
             <AdaptiveDprController />
+
+            {/* AGENT-1: in-canvas FPS / WebGL probe. Reads gl.info and
+                tracks context loss. Feeds the shared debug store that the
+                DOM DebugOverlay polls every 500ms.  No-op when the
+                overlay is gated off — the hook still runs, but the DOM
+                overlay isn't mounted, so it costs ~one assignment per
+                half-second of frames. */}
+            <DebugFpsProbe store={debugStore} />
 
             {/* Orbit / pan / zoom controls — disabled while follow cam is active or while editing furniture. */}
             <OrbitControls

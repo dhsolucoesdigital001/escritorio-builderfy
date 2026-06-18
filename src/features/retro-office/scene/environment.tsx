@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, type ReactNode } from "react";
+import { memo, useEffect, useRef, type ReactNode } from "react";
 import {
   CANVAS_H,
   CANVAS_W,
@@ -172,6 +172,36 @@ export const FloorAndWalls = memo(function FloorAndWalls({
 }: {
   showRemoteOffice?: boolean;
 }) {
+  // AGENT-1: one-time debug log so we can confirm in DevTools that the room
+  // pipeline (GYM / QA / local office / remote) is being processed. We log on
+  // mount and when the showRemoteOffice flag flips — the rest of the time this
+  // is a no-op so it can't spam the console.
+  const floorDebugLoggedRef = useRef(false);
+  useEffect(() => {
+    if (floorDebugLoggedRef.current) return;
+    floorDebugLoggedRef.current = true;
+    const gymWidth = Math.max(0, GYM_ROOM_WIDTH * SCALE);
+    const qaWidth = Math.max(0, QA_LAB_WIDTH * SCALE);
+    const roomH = EAST_WING_ROOM_HEIGHT * SCALE;
+    const inset = 0.08;
+    console.log(
+      "[FloorAndWalls] mounted — showRemoteOffice=%s gymFloorW=%.3f qaFloorW=%.3f roomH=%.3f",
+      showRemoteOffice,
+      Math.max(0, gymWidth - inset * 2),
+      Math.max(0, qaWidth - inset * 2),
+      Math.max(0, roomH - inset * 2),
+    );
+    if (gymWidth - inset * 2 <= 0) {
+      console.warn(
+        "[FloorAndWalls] GYM zone has zero or negative floor width — gym floor mesh will be SKIPPED. Check GYM_ROOM_X / GYM_ROOM_WIDTH constants.",
+      );
+    }
+    if (qaWidth - inset * 2 <= 0) {
+      console.warn(
+        "[FloorAndWalls] QA zone has zero or negative floor width — qa floor mesh will be SKIPPED. Check QA_LAB_X / QA_LAB_WIDTH constants.",
+      );
+    }
+  }, [showRemoteOffice]);
   const districtWidth = CANVAS_W * SCALE;
   const districtHeight = CANVAS_H * SCALE;
   const localOfficeWidth = LOCAL_OFFICE_CANVAS_WIDTH * SCALE;

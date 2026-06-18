@@ -12,6 +12,25 @@ const MAX_FRAMES_PER_SECOND = 60;
 /** Allow short startup bursts before rate limiting. */
 const MAX_FRAME_BURST = 120;
 
+/**
+ * Idle-connection keepalive interval (ms). The proxy sends a WebSocket ping
+ * to BOTH the browser and the upstream gateway on this cadence so intermediate
+ * firewalls / NAT boxes / Tailscale relays do not silently sever the
+ * long-lived connection. A 1006 close (abnormal closure) is the symptom
+ * seen when an idle WebSocket is killed by something in the path; ping/pong
+ * keeps the path warm and surfaces any real network drop as a proper close
+ * frame instead of a 1006.
+ */
+const PING_INTERVAL_MS = 25_000;
+
+/**
+ * Maximum time (ms) we wait for a pong reply after sending a ping. If the
+ * peer is unresponsive for this long we treat the connection as dead and
+ * close it cleanly so the browser gets a meaningful close code rather than
+ * 1006.
+ */
+const PONG_TIMEOUT_MS = 10_000;
+
 const buildErrorResponse = (id, code, message) => {
   return {
     type: "res",
@@ -197,11 +216,21 @@ function createGatewayProxy(options) {
     let closed = false;
     const frameRateLimiter = createFrameRateLimiter();
     let upstreamHandshakeTimeoutId = null;
+    // Keepalive: ping both sides periodically, watch for pong timeouts so a
+    // dead peer is detected quickly with a clean close (avoids 1006 from
+    // intermediate firewall/NAT idleness).
+    let pingIntervalId = null;
+    let browserPongDeadline = 0;
+    let upstreamPongDeadline = 0;
 
     const closeBoth = (code, reason) => {
       if (closed) return;
       closed = true;
       frameRateLimiter.destroy();
+      if (pingIntervalId !== null) {
+        clearInterval(pingIntervalId);
+        pingIntervalId = null;
+      }
       if (upstreamHandshakeTimeoutId !== null) {
         clearTimeout(upstreamHandshakeTimeoutId);
         upstreamHandshakeTimeoutId = null;
@@ -212,6 +241,49 @@ function createGatewayProxy(options) {
       try {
         upstreamWs?.close(code, reason);
       } catch {}
+    };
+
+    const startKeepalive = () => {
+      // Only start pings once the upstream is ready and the browser connect
+      // handshake is complete. Pinging during the handshake would race with
+      // the connect frame and could trip the upstream's protocol checks.
+      if (pingIntervalId !== null) return;
+      const now = Date.now();
+      browserPongDeadline = now + PING_INTERVAL_MS + PONG_TIMEOUT_MS;
+      upstreamPongDeadline = now + PING_INTERVAL_MS + PONG_TIMEOUT_MS;
+      pingIntervalId = setInterval(() => {
+        if (closed) return;
+        const t = Date.now();
+        // Browser side
+        if (browserWs.readyState === WebSocket.OPEN) {
+          if (t > browserPongDeadline) {
+            log("[gateway-proxy] browser pong timeout, closing connection");
+            closeBoth(1011, "browser pong timeout");
+            return;
+          }
+          try {
+            browserWs.ping();
+          } catch (err) {
+            logError("Failed to ping browser.", err);
+          }
+        }
+        // Upstream side
+        if (upstreamReady && upstreamWs?.readyState === WebSocket.OPEN) {
+          if (t > upstreamPongDeadline) {
+            log("[gateway-proxy] upstream pong timeout, closing connection");
+            closeBoth(1011, "upstream pong timeout");
+            return;
+          }
+          try {
+            upstreamWs.ping();
+          } catch (err) {
+            logError("Failed to ping upstream.", err);
+          }
+        }
+      }, PING_INTERVAL_MS);
+      // Unref so the keepalive timer does not keep the event loop alive on
+      // shutdown.
+      pingIntervalId.unref?.();
     };
 
     const sendToBrowser = (frame) => {
@@ -362,7 +434,14 @@ function createGatewayProxy(options) {
           upstreamHandshakeTimeoutId = null;
         }
         upstreamReady = true;
+        // Reset the upstream pong deadline on (re)open so a half-broken
+        // socket does not immediately look dead.
+        upstreamPongDeadline = Date.now() + PING_INTERVAL_MS + PONG_TIMEOUT_MS;
         maybeForwardPendingConnect();
+      });
+
+      upstreamWs.on("pong", () => {
+        upstreamPongDeadline = Date.now() + PING_INTERVAL_MS + PONG_TIMEOUT_MS;
       });
 
       upstreamWs.on("message", (upRaw) => {
@@ -371,6 +450,10 @@ function createGatewayProxy(options) {
           const resId = typeof upParsed.id === "string" ? upParsed.id : "";
           if (resId && connectRequestId && resId === connectRequestId) {
             connectResponseSent = true;
+            // Connect handshake complete — start pinging both sides to
+            // keep the connection alive through NATs / Tailscale / corp
+            // proxies that kill idle WebSockets (causing 1006).
+            startKeepalive();
           }
         }
         if (browserWs.readyState === WebSocket.OPEN) {
@@ -516,6 +599,10 @@ function createGatewayProxy(options) {
       }
 
       upstreamWs.send(JSON.stringify(parsed));
+    });
+
+    browserWs.on("pong", () => {
+      browserPongDeadline = Date.now() + PING_INTERVAL_MS + PONG_TIMEOUT_MS;
     });
 
     browserWs.on("close", () => {

@@ -650,7 +650,14 @@ const isAuthError = (errorMessage: string | null): boolean => {
 };
 
 const MAX_AUTO_RETRY_ATTEMPTS = 20;
-const INITIAL_RETRY_DELAY_MS = 2_000;
+/**
+ * Minimum interval (ms) between automatic reconnection attempts. Acts as a
+ * hard floor on the exponential backoff schedule so the client never hammers
+ * the gateway (or its own proxy) with a tight loop. 5s is the lowest value
+ * that still gives the gateway time to recover from a transient blip.
+ */
+const MIN_RETRY_INTERVAL_MS = 5_000;
+const INITIAL_RETRY_DELAY_MS = MIN_RETRY_INTERVAL_MS;
 const MAX_RETRY_DELAY_MS = 30_000;
 
 const NON_RETRYABLE_CONNECT_ERROR_CODES = new Set([
@@ -721,6 +728,12 @@ export const useGatewayConnection = (
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoConnectTimerRef = useRef<number | null>(null);
   const wasManualDisconnectRef = useRef(false);
+  // Wall-clock timestamp of the most recent connect attempt. Used to enforce
+  // a minimum interval between reconnection attempts regardless of what
+  // `resolveGatewayAutoRetryDelayMs` returns. Without this, an effect re-run
+  // after a quick status flip could schedule a retry within a few hundred ms
+  // of the previous attempt and effectively bypass the backoff schedule.
+  const lastConnectAtRef = useRef(0);
 
   const [gatewayUrl, setGatewayUrl] = useState(DEFAULT_UPSTREAM_GATEWAY_URL);
   const [token, setToken] = useState("");
@@ -894,6 +907,7 @@ export const useGatewayConnection = (
     setConnectErrorCode(null);
     retryAttemptRef.current = 0;
     wasManualDisconnectRef.current = false;
+    lastConnectAtRef.current = Date.now();
     if (
       selectedAdapterType === "custom" ||
       selectedAdapterType === "local" ||
@@ -1031,7 +1045,7 @@ export const useGatewayConnection = (
   // Auto-retry on disconnect (gateway busy, network blip, etc.)
   useEffect(() => {
     const attempt = retryAttemptRef.current;
-    const delay = resolveGatewayAutoRetryDelayMs({
+    const baseDelay = resolveGatewayAutoRetryDelayMs({
       status,
       didAutoConnect: didAutoConnect.current,
       hasConnectedOnce: hasConnectedOnceRef.current,
@@ -1043,7 +1057,35 @@ export const useGatewayConnection = (
       attempt,
     });
     if (!isAutoManagedAdapter(selectedAdapterType)) return;
-    if (delay === null) return;
+    if (baseDelay === null) return;
+    // Enforce a wall-clock minimum between reconnect attempts. This guards
+    // against a tight loop when the status flips rapidly or when the
+    // exponential backoff resolves to a small value (e.g. attempt 0).
+    const now = Date.now();
+    const sinceLastConnect = lastConnectAtRef.current > 0 ? now - lastConnectAtRef.current : Infinity;
+    const minDelay = Math.max(0, MIN_RETRY_INTERVAL_MS - sinceLastConnect);
+    const delay = Math.max(baseDelay, minDelay);
+    if (delay <= 0) {
+      // The minimum interval has already elapsed — fire immediately on the
+      // next microtask so the effect's cleanup can still observe the timer.
+      gatewayDebugLog("auto-retry-immediate", {
+        selectedAdapterType,
+        attempt: attempt + 1,
+        gatewayUrl,
+        sinceLastConnect,
+      });
+      retryTimerRef.current = setTimeout(() => {
+        lastConnectAtRef.current = Date.now();
+        void connect();
+        retryAttemptRef.current = attempt + 1;
+      }, 0);
+      return () => {
+        if (retryTimerRef.current) {
+          clearTimeout(retryTimerRef.current);
+          retryTimerRef.current = null;
+        }
+      };
+    }
     gatewayDebugLog("auto-retry-scheduled", {
       selectedAdapterType,
       attempt: attempt + 1,
@@ -1055,6 +1097,7 @@ export const useGatewayConnection = (
       // Call connect first (it synchronously resets retryAttemptRef to 0),
       // then override with the correct attempt count so the next auto-retry
       // uses proper exponential backoff.
+      lastConnectAtRef.current = Date.now();
       void connect();
       retryAttemptRef.current = attempt + 1;
       gatewayDebugLog("auto-retry-fire", {

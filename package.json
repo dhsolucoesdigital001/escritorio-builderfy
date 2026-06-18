@@ -18,7 +18,8 @@
     "smoke:dev-server": "node scripts/smoke-dev-server.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "postinstall": "patch-package --patch-dir patches"
   },
   "dependencies": {
     "@noble/ed25519": "^3.0.0",

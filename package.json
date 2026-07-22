@@ -19,7 +19,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "e2e": "playwright test",
-    "postinstall": "patch-package --patch-dir patches"
+    "postinstall": "npx patch-package --patch-dir patches"
   },
   "dependencies": {
     "@noble/ed25519": "^3.0.0",

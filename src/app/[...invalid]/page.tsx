@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   title: "Office — escritorio-builderfy",
 };
 
+export async function generateStaticParams() {
+  return [{ invalid: ["404"] }];
+}
+
 type PageProps = {
   params: Promise<{ invalid?: string[] }>;
 };
